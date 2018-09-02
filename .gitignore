@@ -2,3 +2,6 @@
 htdocs/static/asset/*
 htdocs/application/config/stikked.php
 nbproject
+*.project
+*.buildpath
+/.settings/
