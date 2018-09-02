@@ -3,6 +3,9 @@ RewriteEngine on
 RewriteCond $1 !^(index\.php|static|favicon\.ico|robots\.txt|sitemap.xml|google(.+)\.html)
 RewriteRule ^(.*)$ index.php?/$1 [QSA,L]
 
+# basic auth for PHP with fastcgi
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization},L]
+
 SetOutputFilter DEFLATE
 FileETag MTime Size
 
@@ -21,7 +24,7 @@ FileETag MTime Size
     ExpiresByType image/gif "access plus 1 year"
     ExpiresByType image/png "access plus 1 year"
     ExpiresByType image/x-icon "access plus 1 year"
-	ExpiresByType application/font-woff "access plus 1 year"
+    ExpiresByType application/font-woff "access plus 1 year"
     ExpiresByType application/vnd.ms-fontobject "access plus 1 year"
     ExpiresByType application/x-font-ttf "access plus 1 year"
     ExpiresByType font/opentype "access plus 1 year"
@@ -32,3 +35,5 @@ FileETag MTime Size
 #AuthName "Backend"
 #AuthUserFile /path/to/.htpasswd #create one with htpasswd -c .htpasswd username
 #Require user username
+
+AddHandler php5-fastcgi .php .php5

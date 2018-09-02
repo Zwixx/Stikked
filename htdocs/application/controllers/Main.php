@@ -70,7 +70,7 @@ class Main extends CI_Controller
 			$fields = array(
 				'id' => array(
 					'type' => 'VARCHAR',
-					'constraint' => 40,
+					'constraint' => 128,
 					'default' => 0,
 				) ,
 				'ip_address' => array(
@@ -85,7 +85,7 @@ class Main extends CI_Controller
 					'default' => 0,
 				) ,
 				'data' => array(
-					'type' => 'BLOB',
+					'type' => ($this->db->dbdriver == "postgre") ? 'TEXT' : 'BLOB',
 				) ,
 			);
 			$this->dbforge->add_field($fields);
@@ -127,7 +127,7 @@ class Main extends CI_Controller
 					'constraint' => 1,
 				) ,
 				'raw' => array(
-					'type' => 'LONGTEXT',
+					'type' => ($this->db->dbdriver == "postgre") ? 'TEXT' : 'LONGTEXT',
 				) ,
 				'created' => array(
 					'type' => 'INT',
@@ -266,7 +266,7 @@ class Main extends CI_Controller
 		//ipv6 migration
 		$fields = $this->db->field_data('trending');
 		
-		if (config_item('db_driver') != 'sqlite' && $fields[1]->max_length < 45) 
+		if (stristr(config_item('db_driver') , 'sqlite') === false && $fields[1]->max_length < 45) 
 		{
 			$db_prefix = config_item('db_prefix');
 			
@@ -294,7 +294,7 @@ class Main extends CI_Controller
 			if ($field->name == 'title') 
 			{
 				
-				if (config_item('db_driver') != 'sqlite' && $field->max_length < 50) 
+				if (stristr(config_item('db_driver') , 'sqlite') === false && $field->max_length < 50) 
 				{
 					$db_prefix = config_item('db_prefix');
 					
@@ -309,6 +309,34 @@ class Main extends CI_Controller
 				}
 			}
 		}
+
+		//upgrade to CI 3.1.2
+		$fields = $this->db->field_data('sessions');
+		foreach ($fields as $field) 
+		{
+			
+			if ($field->name == 'id') 
+			{
+				
+				if (stristr(config_item('db_driver') , 'sqlite') === false) 
+				{
+					
+					if ($field->max_length < 128) 
+					{
+						$db_prefix = config_item('db_prefix');
+						
+						if ($this->db->dbdriver == "postgre") 
+						{
+							$this->db->query("ALTER TABLE " . $db_prefix . "sessions ALTER COLUMN id SET DATA TYPE varchar(128)");
+						}
+						else
+						{
+							$this->db->query("ALTER TABLE " . $db_prefix . "sessions CHANGE id id VARCHAR(128) NOT NULL");
+						}
+					}
+				}
+			}
+		}
 	}
 	
 	function _form_prep($lang = false, $title = '', $paste = '', $reply = false) 
@@ -316,23 +344,44 @@ class Main extends CI_Controller
 		$this->load->model('languages');
 		$this->load->helper('form');
 		$data['languages'] = $this->languages->get_languages();
-
-		//codemirror languages
-		$this->load->config('codemirror_languages');
-		$codemirror_languages = config_item('codemirror_languages');
-		$data['codemirror_languages'] = $codemirror_languages;
-
-		//codemirror modes
-		$cmm = array();
-		foreach ($codemirror_languages as $geshi_name => $l) 
+		
+		if (config_item('js_editor') == 'codemirror') 
 		{
-			
-			if (gettype($l) == 'array') 
+
+			//codemirror languages
+			$this->load->config('codemirror_languages');
+			$codemirror_languages = config_item('codemirror_languages');
+			$data['codemirror_languages'] = $codemirror_languages;
+
+			//codemirror modes
+			$cmm = array();
+			foreach ($codemirror_languages as $geshi_name => $l) 
 			{
-				$cmm[$geshi_name] = $l['mode'];
+				
+				if (gettype($l) == 'array') 
+				{
+					$cmm[$geshi_name] = $l['mode'];
+				}
 			}
+			$data['codemirror_modes'] = $cmm;
 		}
-		$data['codemirror_modes'] = $cmm;
+		
+		if (config_item('js_editor') == 'ace') 
+		{
+
+			//ace languages
+			$this->load->config('ace_languages');
+			$ace_languages = config_item('ace_languages');
+			$data['ace_languages'] = $ace_languages;
+
+			//ace modes
+			$acem = array();
+			foreach ($ace_languages as $geshi_name => $l) 
+			{
+				$acem[$geshi_name] = $l;
+			}
+			$data['ace_modes'] = $acem;
+		}
 
 		//recaptcha
 		$data['use_recaptcha'] = $this->use_recaptcha;
@@ -377,7 +426,7 @@ class Main extends CI_Controller
 			$data['expire_set'] = $this->input->post('expire');
 			$data['private_set'] = $this->input->post('private');
 			$data['snipurl_set'] = $this->input->post('snipurl');
-			$data['paste_set'] = $this->input->post('code');
+			$data['paste_set'] = htmlspecialchars($this->input->post('code'));
 			$data['title_set'] = $this->input->post('title');
 			$data['reply'] = $this->input->post('reply');
 			$data['lang_set'] = $this->input->post('lang');
@@ -475,11 +524,20 @@ class Main extends CI_Controller
 	
 	function post_encrypted() 
 	{
-		$this->load->model('pastes');
-		$_POST['private'] = 1;
-		$_POST['snipurl'] = 0;
-		$ret_url = $this->pastes->createPaste();
-		echo $ret_url;
+		$this->_valid_authentication();
+		
+		if ($this->_valid_captcha($this->input->post('captcha'))) 
+		{
+			$this->load->model('pastes');
+			$_POST['private'] = 1;
+			$_POST['snipurl'] = 0;
+			$ret_url = $this->pastes->createPaste();
+			echo $ret_url;
+		}
+		else
+		{
+			echo 'E_CAPTCHA';
+		}
 	}
 	
 	function raw() 
@@ -491,6 +549,12 @@ class Main extends CI_Controller
 		if ($check) 
 		{
 			$data = $this->pastes->getPaste(3);
+			
+			if (isset($_GET['preview'])) 
+			{
+				$this->load->helper('text');
+				$data['raw'] = character_limiter($data['raw'], 500);
+			}
 			$this->load->view('view/raw', $data);
 		}
 		else
@@ -540,8 +604,13 @@ class Main extends CI_Controller
 	function qr() 
 	{
 		$this->load->model('pastes');
-		$data = $this->pastes->getPaste(3);
-		$this->load->view('view/qr', $data);
+		$check = $this->pastes->checkPaste(3);
+		
+		if ($check) 
+		{
+			$data = $this->pastes->getPaste(3);
+			$this->load->view('view/qr', $data);
+		}
 	}
 	
 	function download() 
@@ -693,7 +762,11 @@ class Main extends CI_Controller
 		
 		if (config_item('enable_captcha') && $this->session->userdata('is_human') === null) 
 		{
-			$this->form_validation->set_message('_valid_captcha', lang('captcha'));
+			
+			if (isset($this->form_validation)) 
+			{
+				$this->form_validation->set_message('_valid_captcha', lang('captcha'));
+			}
 			
 			if ($this->use_recaptcha) 
 			{

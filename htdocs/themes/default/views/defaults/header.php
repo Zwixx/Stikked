@@ -21,13 +21,14 @@ $this->carabiner->config(array(
     'script_dir' => 'themes/default/js/',
     'style_dir'  => 'themes/' . $theme . '/css/',
     'cache_dir'  => 'static/asset/',
-    'base_uri'	 => base_url(),
+    'base_uri'	 => $this->config->item('base_url'),
     'combine'	 => true,
     'dev'		 => !$this->config->item('combine_assets'),
 ));
 
 // CSS
 $this->carabiner->css('reset.css');
+$this->carabiner->css('jquery-ui.min.css');
 $this->carabiner->css('fonts.css');
 $this->carabiner->css('main.css');
 $this->carabiner->css('print.css', 'print');

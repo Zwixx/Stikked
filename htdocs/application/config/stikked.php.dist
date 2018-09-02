@@ -9,6 +9,14 @@
 $config['site_name'] = 'Stikked';
 
 /**
+ * Base URL
+ *
+ * Set the base URL of Stikked. WITH trailing slash!
+ *
+*/
+$config['base_url'] = 'https://yourpastebin.com/';
+
+/**
  * Database connection
  *
  * Credentials for your database
@@ -19,7 +27,13 @@ $config['db_hostname'] = '127.0.0.1';
 $config['db_database'] = 'stikked';
 $config['db_username'] = 'stikked';
 $config['db_password'] = 'stikked';
+
+// If you are using sqlite:
+// uncomment the configuration lines below.
+//$config['db_database'] = 'db/stikked';
 //$config['db_driver'] = 'sqlite';
+// you need to create a directory "db" and give the webserver write access.
+// sqlite needs a writable folder to work properly!
 
 /**
  * Table prefix
@@ -39,6 +53,27 @@ $config['db_prefix'] = '';
  *
 */
 $config['theme'] = 'default';
+
+/**
+ * Display QR code
+ *
+ * Whether or not to display the QR code
+ *
+*/
+$config['qr_enabled'] = true;
+
+/**
+ * JavaScript-Editor
+ *
+ * Which editor to use
+ * CodeMirror, ACE or none
+ *
+ * none:        ~130kb JS
+ * CodeMirror:  ~300kb JS
+ * ACE:         >800kb JS
+ *
+*/
+$config['js_editor'] = ''; // codemirror, ace, ''
 
 /**
  * Language
@@ -73,10 +108,11 @@ $config['cron_key'] = '';
  *           @string yourls
  *           @string gwgd
  *           @string googl
- *           @string bitly 
+ *           @string bitly
+ *           @string polr
  *           @string random - Randomly chose any of upper API-s !WARNING! May be slow! For maximum performanse, it's recommended to either set all API keys or use random_url_engines to list working engines.
  *           @string none - same as off
- * 
+ *
  * random_url_engines:
  *    - This variable sets list of APIs to be considered for usage if url_shortening_use is set to 'random'
  *      To consider all API-s, either leave it empty (as empty array or string) or type all apis available (yourls,gwgd,googl,bitly)
@@ -88,7 +124,7 @@ $config['cron_key'] = '';
  *      - If input is @string it must be comma delimited, otherwise will be ignored.
  *      - Script will accept minimum of 2 APIs, ignored otherwise
  *      - Only alphanumeric characters and "." are allowed. Everything else is filtered out.
- * 
+ *
  * -------------------------------------------------------------------------------------------------------------
  * yourls_url: Your own instance of yourls URL-shortener (Download: http://yourls.org/)
  * Example: http://example.com/yourls/
@@ -99,12 +135,15 @@ $config['cron_key'] = '';
  * gwgd_url: Your own instance of the gw.gd URL-shortener (Download: https://github.com/neofutur/gwgd)
  * Default: http://gw.gd/
  *
- * googl_url_api: URL shortening service provided by Google Inc. (API: http://code.google.com/apis/console/) 
+ * googl_url_api: URL shortening service provided by Google Inc. (API: http://code.google.com/apis/console/)
  * Usage: Your API key
- * 
+ *
  * bitly_url_api: Famous URL shortening service (API: http://dev.bitly.com/get_started.html)
  * Usage: Your API key
- * 
+ *
+ * polr_url: Your own instance of polr URL-shortener (Download: https://github.com/cydrobolt/polr)
+ * polr_api: Your polr api key
+ *
 **/
 $config['url_shortening_use'] = 'off';
 $config['random_url_engines'] = 'googl,bitly'; // Used only in random mode, read comment above for more info
@@ -120,9 +159,13 @@ $config['shorturl_selected'] = false;
 
 // goo.gl API key
 $config['googl_url_api'] = '';
+
 // Bit.ly API key
 $config['bitly_url_api'] = '';
 
+// polr
+$config['polr_url'] = '';
+$config['polr_api'] = '';
 
 
 /**
@@ -150,6 +193,19 @@ $config['per_page'] = 15;
  *
 **/
 $config['apikey'] = '';
+
+/**
+ * Soft API
+ *
+ * When set to true, allow interaction:
+ *   without apikey: badword-check applies
+ *   with apikey: badwords are ignored
+ *
+ * This is useful to maintain a restrictive blocklist
+ * for spammers and bypass it using the apikey.
+ *
+**/
+$config['soft_api'] = false;
 
 /**
  * Anti spam
@@ -227,9 +283,9 @@ $config['unknown_title'] = 'Untitled';
  * Weather to require LDAP authenticaiton or not.
  * Set to either 'true' to require authentication or 'false' not to.
  * NOTE: if changed, set LDAP settings in auth_ldap.php
-**/ 
+**/
 $config['require_auth'] = false;
- 
+
 /**
  * Override the displayed URL
  *

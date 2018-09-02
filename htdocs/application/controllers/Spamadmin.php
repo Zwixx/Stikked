@@ -21,6 +21,9 @@ class Spamadmin extends CI_Controller
 		//protection
 		$user = $this->config->item('spamadmin_user');
 		$pass = $this->config->item('spamadmin_pass');
+
+		// basic auth for fastcgi
+		list($_SERVER['PHP_AUTH_USER'], $_SERVER['PHP_AUTH_PW']) = explode(':', base64_decode(substr($_SERVER['HTTP_AUTHORIZATION'], 6)));
 		
 		if ($user == '' || $pass == '' || !isset($_SERVER['PHP_AUTH_USER']) || $_SERVER['PHP_AUTH_USER'] != $user || $_SERVER['PHP_AUTH_PW'] != $pass) 
 		{
@@ -33,6 +36,19 @@ class Spamadmin extends CI_Controller
 	function index() 
 	{
 		$this->load->model('pastes');
+		$pastes_to_delete = $this->input->post('pastes_to_delete');
+		
+		if ($pastes_to_delete) 
+		{
+			foreach (explode(' ', $pastes_to_delete) as $pid) 
+			{
+				$this->db->where('pid', $pid);
+				$this->db->delete('pastes');
+			}
+			redirect(site_url('spamadmin/' . $this->uri->segment(2)));
+		}
+
+		//render view
 		$data = $this->pastes->getSpamLists();
 		$this->load->view('list_ips', $data);
 	}
@@ -58,7 +74,7 @@ class Spamadmin extends CI_Controller
 				{
 					$this->db->insert('blocked_ips', array(
 						'ip_address' => $ip_address,
-						'blocked_at' => mktime() ,
+						'blocked_at' => time() ,
 						'spam_attempts' => $paste_count,
 					));
 				}
@@ -69,8 +85,20 @@ class Spamadmin extends CI_Controller
 		$data = $this->pastes->getSpamLists('spamadmin/' . $ip_address, $seg = 3, $ip_address);
 		$data['ip_address'] = $ip_address;
 		$ip = explode('.', $ip_address);
-		$ip_firstpart = $ip[0] . '.' . $ip[1] . '.';
-		$data['ip_range'] = $ip_firstpart . '*.*';
+		
+		if (count($ip) > 1) 
+		{
+			$ip_firstpart = $ip[0] . '.' . $ip[1] . '.';
+			$data['ip_range'] = $ip_firstpart . '*.*';
+		}
+		else
+		{
+
+			// ipv6
+			$ip = explode(':', $ip_address);
+			$ip_firstpart = $ip[0] . ':' . $ip[1] . ':' . $ip[2] . ':' . $ip[3] . ':' . $ip[4] . ':' . $ip[5] . ':' . $ip[6];
+			$data['ip_range'] = $ip_firstpart . ':*';
+		}
 
 		//view
 		$this->load->view('spam_detail', $data);

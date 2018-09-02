@@ -1,4 +1,3 @@
-
 <?php echo validation_errors(); ?>
 
 <div class="form_wrapper margin">
@@ -13,44 +12,41 @@
 			<?php echo lang('paste_create_new_desc'); ?>
 		<?php } else { ?>
 			<?php echo $page['instructions']; ?>
-		<?php } ?></p>								
-		
-		<div class="item_group">								
+		<?php } ?></p>
+
+		<div class="item_group">
 			<div class="item">
 				<label for="name"><?php echo lang('paste_author'); ?>
 					<span class="instruction"><?php echo lang('paste_author_desc'); ?></span>
 				</label>
-				
 				<?php $set = array('name' => 'name', 'id' => 'name', 'value' => $name_set, 'maxlength' => '32', 'tabindex' => '1');
 				echo form_input($set);?>
 			</div>
-			
 			<div class="item">
 				<label for="title"><?php echo lang('paste_title'); ?>
 					<span class="instruction"><?php echo lang('paste_title_desc'); ?></span>
 				</label>
-				
 				<input value="<?php if(isset($title_set)){ echo $title_set; }?>" type="text" id="title" name="title" tabindex="2" maxlength="50" />
 			</div>
-																		
+
 			<div class="item last">
 				<label for="lang"><?php echo lang('paste_lang'); ?>
 					<span class="instruction"><?php echo lang('paste_lang_desc'); ?></span>
 				</label>
-				
 				<?php $lang_extra = 'id="lang" class="select" tabindex="3"'; echo form_dropdown('lang', $languages, $lang_set, $lang_extra); ?>
-			</div>								
-		</div>							
-		
+			</div>
+		</div>
+
 		<div class="item">
 			<label for="paste"><?php echo lang('paste_yourpaste'); ?>
 				<span class="instruction"><?php echo lang('paste_yourpaste_desc'); ?></span>
                 <span class="instruction"><a href="#" id="enable_codemirror" data-lang-enablesynhl="<?php echo lang('paste_enablesynhl'); ?>" data-lang-disablesynhl="<?php echo lang('paste_disablesynhl'); ?>"></a></span>
 			</label>
-			
+
 			<textarea id="code" name="code" cols="40" rows="20" tabindex="4"><?php if(isset($paste_set)){ echo $paste_set; }?></textarea>
-		</div>																											
-		
+
+		</div>
+
 		<div class="item_group">
 			<div class="item">
 				<label for="snipurl"><?php echo lang('paste_create_shorturl'); ?>
@@ -67,7 +63,7 @@
 					?>
 				</div>
 			</div>
-		
+
 			<div class="item">
 				<label for="private"><?php echo lang('paste_private'); ?>
 					<span class="instruction"><?php echo lang('paste_private_desc'); ?></span>
@@ -83,14 +79,13 @@
 					?>
 				</div>
 			</div>
-		
+
 			<div class="item">
 				<label for="expire"><?php echo lang('paste_delete'); ?>
 					<span class="instruction"><?php echo lang('paste_delete_desc'); ?></span>
 				</label>
-				<?php 
+				<?php
 					$expire_extra = 'id="expire" class="select" tabindex="7"';
-                    $default_expiration = config_item('default_expiration');
 					$options = array(
 									"burn" => lang('exp_burn'),
 									"5" => lang('exp_5min'),
@@ -103,10 +98,10 @@
                     if(! config_item('disable_keep_forever')) {
                         $options['0'] = lang('exp_forever');
                     }
-				echo form_dropdown('expire', $options, $default_expiration, $expire_extra); ?>
+				echo form_dropdown('expire', $options, $expire_set, $expire_extra); ?>
 			</div>
 		</div>
-		
+
 <?php if($reply){ ?>
 		<input type="hidden" value="<?php echo $reply; ?>" name="reply" />
 <?php } ?>
@@ -135,6 +130,15 @@
 ?>
 
 		<div class="clear"><button type="submit" value="submit" name="submit"><?php echo lang('paste_create'); ?></button></div>
+		<?php
+		if ($this->config->item('csrf_protection') === TRUE)
+		{
+			if(isset($_COOKIE[$this->config->item('csrf_cookie_name')])) {
+				echo '<input type="hidden" name="'.$this->config->item('csrf_token_name').'" value="'.html_escape($_COOKIE[$this->config->item('csrf_cookie_name')]).'" style="display:none;" />'."\n";
+			}
+		}
+		?>
 		<div class="spacer"></div>
+
 	</form>
 </div>

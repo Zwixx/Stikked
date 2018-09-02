@@ -26,6 +26,13 @@ class Api extends Main
 		{
 			die("The API has been disabled\n");
 		}
+
+        // if ldap is configured and no api token is configured, fail the request
+        if ((config_item('require_auth') == true) && (config_item('apikey') == ''))
+        {
+             die("API key not configured");
+        }
+
 	}
 	
 	function index() 
@@ -40,7 +47,7 @@ class Api extends Main
 	function create() 
 	{
 		
-		if (config_item('apikey') != $this->input->get('apikey')) 
+		if (config_item('apikey') != $this->input->get('apikey') && config_item('soft_api') == false) 
 		{
 			die("Invalid API key\n");
 		}
@@ -74,9 +81,19 @@ class Api extends Main
 				die("You are not allowed to paste\n");
 			}
 			
-			if (!$this->_blockwords_check()) 
+			if (config_item('soft_api') == true && (config_item('apikey') == $this->input->get('apikey'))) 
 			{
-				die("Your paste contains blocked words\n");
+
+				//pass
+				
+			}
+			else
+			{
+				
+				if (!$this->_blockwords_check()) 
+				{
+					die("Your paste contains blocked words\n");
+				}
 			}
 
 			//create paste
@@ -192,6 +209,11 @@ class Api extends Main
 	
 	function langs() 
 	{
+		if (config_item('apikey') != $this->input->get('apikey')) 
+		{
+			die("Invalid API key\n");
+		}
+		
 		$languages = $this->languages->get_languages();
 		echo json_encode($languages);
 	}

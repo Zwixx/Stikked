@@ -24,7 +24,7 @@ $config['base_url']	= '';
 | So that we can track your version.
 |
 */
-$config['stikked_version'] = '0.10.0';
+$config['stikked_version'] = '0.12.0';
 
 /*
 |--------------------------------------------------------------------------
@@ -315,20 +315,6 @@ $config['cookie_httponly'] 	= FALSE;
 
 /*
 |--------------------------------------------------------------------------
-| Standardize newlines
-|--------------------------------------------------------------------------
-|
-| Determines whether to standardize newline characters in input data,
-| meaning to replace \r\n, \r, \n occurrences with the PHP_EOL value.
-|
-| This is particularly useful for portability between UNIX-based OSes,
-| (usually \n) and Windows (\r\n).
-|
-*/
-$config['standardize_newlines'] = TRUE;
-
-/*
-|--------------------------------------------------------------------------
 | Global XSS Filtering
 |--------------------------------------------------------------------------
 |
@@ -419,10 +405,10 @@ $config['proxy_ips'] = '';
 | Favorite Languages
 |--------------------------------------------------------------------------
 |
-| The favorite languages, that's at the beginning of the list. 
+| The favorite languages, that's at the beginning of the list.
 |
 */
-$config['favorite_languages'] = array('text', 'html5', 'css', 'javascript', 'php', 'python', 'ruby', 
+$config['favorite_languages'] = array('text', 'html5', 'css', 'javascript', 'php', 'python', 'ruby',
 		'lua', 'bash', 'erlang', 'go', 'c', 'cpp', 'diff', 'latex', 'sql', 'xml');
 
 /* End of file config.php */
